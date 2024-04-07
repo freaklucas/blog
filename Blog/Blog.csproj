@@ -14,4 +14,8 @@
     <PackageReference Include="MIcrosoft.EntityFrameworkCore.SqlServer" Version="8.0.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="ViewModels\EditCategoryViewModel.cs" />
+  </ItemGroup>
+
 </Project>
