@@ -1,4 +1,5 @@
 using Blog.Data;
+using Blog.Extensions;
 using Blog.Models;
 using Blog.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -15,12 +16,12 @@ public class CategoryController : ControllerBase
         try
         {
             var categories = await context.Categories.ToListAsync();
-            return Ok(categories);
+
+            return Ok(new ResultViewModel<List<Category>>(categories));
         }
-        catch (Exception e)
+        catch
         {
-            Console.WriteLine(e);
-            return BadRequest("05EX01 Falha interna na aplicação.");
+            return StatusCode(500, new ResultViewModel<List<Category>>("05EX01 Falha interna na aplicação."));
         }
     }
 
@@ -29,16 +30,17 @@ public class CategoryController : ControllerBase
     {
         try
         {
-            var category = await context.Categories.FirstOrDefaultAsync(p => p.Id == id);
+            var category = await context
+                .Categories
+                .FirstOrDefaultAsync(p => p.Id == id);
 
-            if (category == null) return NotFound("Categoria não existe.");
+            if (category == null) return NotFound(new ResultViewModel<Category>("Categoria não encontrada."));
 
-            return Ok(category);
+            return Ok(new ResultViewModel<Category>(category));
         }
-        catch (Exception e)
+        catch
         {
-            Console.WriteLine(e);
-            return BadRequest("05EX02 Falha interna na aplicação.");
+            return BadRequest(new ResultViewModel<Category>("05EX02 Falha interna na aplicação."));
         }
     }
 
@@ -48,6 +50,8 @@ public class CategoryController : ControllerBase
         [FromBody] EditorCategoryViewModel model,
         [FromServices] BlogDataContext context)
     {
+        if (!ModelState.IsValid) return BadRequest(new ResultViewModel<Category>(ModelState.GetErrors()));
+
         try
         {
             var category = new Category
@@ -60,13 +64,13 @@ public class CategoryController : ControllerBase
             await context.Categories.AddAsync(category);
             await context.SaveChangesAsync();
 
-            return Created($"v1/categories/{category.Id}", model);
+            return Created($"v1/categories/{category.Id}", new ResultViewModel<Category>(category));
         }
-        catch (Exception e)
+        catch
         {
-            Console.WriteLine(e); // Atenção para vazar muitos detalhes em 500.
+            // Atenção para vazar muitos detalhes em 500.
 
-            return StatusCode(500, "05EX03 Falha interna na aplicação.");
+            return StatusCode(500, new ResultViewModel<Category>("05EX03 Falha interna na aplicação."));
         }
     }
 
@@ -79,7 +83,7 @@ public class CategoryController : ControllerBase
         try
         {
             var identify = await context.Categories.FirstOrDefaultAsync(p => p.Id == id);
-            if (identify == null) return NotFound("Identificador não encontrado.");
+            if (identify == null) return NotFound(new ResultViewModel<Category>("Identificador não encontrado."));
 
             identify.Name = model.Name;
             identify.Slug = model.Slug;
@@ -87,12 +91,11 @@ public class CategoryController : ControllerBase
             context.Categories.Update(identify);
             await context.SaveChangesAsync();
 
-            return Ok(model);
+            return Ok(new ResultViewModel<Category>(identify));
         }
-        catch (Exception e)
+        catch
         {
-            Console.WriteLine(e);
-            return StatusCode(500, "05EX04 Falha interna na aplicação.");
+            return StatusCode(500, new ResultViewModel<Category>("05EX04 Falha interna na aplicação."));
         }
     }
 
@@ -103,17 +106,16 @@ public class CategoryController : ControllerBase
         {
             var identify = await context.Categories.FirstOrDefaultAsync(p => p.Id == id);
 
-            if (identify == null) return BadRequest("Identificador não encontrado.");
+            if (identify == null) return NotFound(new ResultViewModel<Category>("Identificador não encontrado."));
 
             context.Categories.Remove(identify);
             await context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new ResultViewModel<Category>(identify));
         }
-        catch (Exception e)
+        catch
         {
-            Console.WriteLine(e);
-            return StatusCode(500, "05EX05 Falha interna na aplicação.");
+            return StatusCode(500, new ResultViewModel<Category>("05EX05 Falha interna na aplicação."));
         }
     }
 }
