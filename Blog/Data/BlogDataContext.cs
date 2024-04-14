@@ -19,7 +19,8 @@ public class BlogDataContext : DbContext
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
         options.UseSqlServer(
-            "Server=localhost;Database=Blog;Integrated Security=SSPI;TrustServerCertificate=True;");
+            "Server=localhost;Database=Blog;Integrated Security=SSPI;TrustServerCertificate=True;")
+            .LogTo(Console.WriteLine, LogLevel.Information);
     }
 
 
