@@ -54,10 +54,43 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost("/v1/accounts/login")]
-    public IActionResult Login()
+    public async Task <IActionResult> Login(
+        [FromBody] LoginViewModel? model,
+        [FromServices] BlogDataContext context,
+        [FromServices] TokenService tokenService)
     {
-        var token = _tokenService.GenerateToken(null);
 
-        return Ok(token);
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(new ResultViewModel<string>(ModelState.GetErrors()));
+        }
+
+        var user = await context
+            .Users
+            .AsNoTracking()
+            .Include(x => x.Roles)
+            .FirstOrDefaultAsync(u => model != null && u.Email == model.Email);
+
+        if (user == null)
+        {
+            return StatusCode(400, new ResultViewModel<string>("Usuário ou senha inválidos."));
+        }
+
+        if (!PasswordHasher.Verify(user.PasswordHash, model.Password))
+        {
+            return StatusCode(401, new ResultViewModel<string>("Usuário inválido."));
+        }
+
+
+        try
+        {
+            var token = tokenService.GenerateToken(user);
+
+            return Ok(new ResultViewModel<string>(token, errors: null));
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, new ResultViewModel<string>("0XE00 - Falha interna na aplicação."));
+        }
     }
 }
