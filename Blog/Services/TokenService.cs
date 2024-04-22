@@ -11,20 +11,28 @@ public class TokenService
 {
     public string GenerateToken(User user)
     {
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(Configuration.JWTKey);
-        var claims = new User().GetClaims();
-        
-        var tokenDescriptor = new SecurityTokenDescriptor
+        try
         {
-            Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddHours(8),
-            SigningCredentials = new SigningCredentials(
-                new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-        };
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(Configuration.JWTKey);
+            var claims = user.GetClaims();
 
-        var token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddHours(8),
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
 
-        return tokenHandler.WriteToken(token);
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exceção ao gerar o token: " + ex.Message);
+
+            throw;
+        }
     }
 }

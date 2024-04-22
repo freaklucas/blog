@@ -76,6 +76,7 @@ public class AccountController : ControllerBase
             return StatusCode(400, new ResultViewModel<string>("Usuário ou senha inválidos."));
         }
 
+        
         if (!PasswordHasher.Verify(user.PasswordHash, model.Password))
         {
             return StatusCode(401, new ResultViewModel<string>("Usuário inválido."));
@@ -85,7 +86,12 @@ public class AccountController : ControllerBase
         try
         {
             var token = tokenService.GenerateToken(user);
-
+            
+            if (string.IsNullOrEmpty(token))
+            {
+                return StatusCode(401, new ResultViewModel<string>("0XE01 - Falha na aplicação."));
+            }
+            
             return Ok(new ResultViewModel<string>(token, errors: null));
         }
         catch (Exception e)
